@@ -1,4 +1,5 @@
 import json
+import os.path
 import time
 import numpy as np
 import torch
@@ -9,13 +10,12 @@ from torch.autograd import Variable
 
 
 
-class dcn(nn.Module):  # 定义网络
+class Nen(nn.Module):  # 定义网络
     def __init__(self):
-        super(dcn, self).__init__()
+        super(Nen, self).__init__()
         self.linear = nn.Linear(2, 1)
         self.sigmoid = nn.Sigmoid()
         self.relu = nn.ReLU()
-        self.theta = theta
         self.w1 = Variable(torch.tensor(np.random.rand(1)))
         self.w2 = 1-self.w1
         self.ll = torch.unsqueeze(torch.tensor((self.w1,self.w2)),1)
@@ -126,143 +126,140 @@ class dcn(nn.Module):  # 定义网络
         # time.sleep(10)
         return x_list
 
-def test():
-    model=torch.load('test.pth')
-    model.eval()
-    val_data_loader = val_data()
-    for step, (batch_x, batch_y) in enumerate(val_data_loader):  
-        # print(batch_x.shape)
-        pred = model(batch_x)
-        out = dtmax(theta,pred)
-        # print(out)
-        # print(batch_y)
+
+class Trainmodel:
+    def __init__(self,theta):
+        self.batch_size = 40
+        self.epochs = 500
+        self.theta = theta
+        np.random.seed(42)
+        self.model = Nen()
+        self.learning_rate = 1e-6
+        self.loss_fn = nn.MSELoss()
+        self.optimizer = torch.optim.SGD(self.model.parameters(), lr=self.learning_rate)
+        self.total_acc = 0
+        self.total_tpr = 0
+        self.total_fpr = 1
+
+    def test(self):
+        model=torch.load('test.pth')
+        model.eval()
+        val_data_loader = self.val_data()
         count = 0
         acc = 0
-        for i in range(len(out)):
+        tprn = 0
+        fprn = 0
+        total0 = 0
+        total1 = 0
+        for step, (batch_x, batch_y) in enumerate(val_data_loader):
+            # print(batch_x.shape)
+            pred = model(batch_x)
+            # print(pred)
+            out = self.dtmax(self.theta,pred)
+            y = batch_y.tolist()
+            # print(out)
+            # print(y)
+            for i in range(len(out)):
+                count += 1
+                if y[i] ==0:
+                    total0 +=1
+                else:
+                    total1+=1
+                if int(out[i]) == int(y[i]):
+                    acc+=1
 
-            if int(out[i]) == int(batch_y.tolist()[i]):
-                count+=1
-                acc+=1
-            else:
-                count+=1
+                if int(out[i]) == 1 and int(y[i])==1:
+                    tprn+=1
+                if int(out[i]) == 1 and int(y[i])==0:
+                    fprn +=1
+        # print(acc,count,tprn,fprn,total0,total1)
+        # time.sleep(10)
+        tpr = round((tprn/total1),3)
+        fpr = round((fprn/total0),3)
         acc2 = round((acc/count),3)
         # time.sleep(100)
-        return acc2
+        return acc2 ,tpr,fpr
 
-def dtmax(theta,pred_tensor):
-    relist = []
-    predlist = pred_tensor.tolist()
-    for i in predlist:
-        if i >theta:
-            relist.append(1)
-        else:
-            relist.append(0)
-    return relist
+    def dtmax(self,theta,pred_tensor):
+        relist = []
+        predlist = pred_tensor.tolist()
+        for i in predlist:
+            if i >theta:
+                relist.append(1)
+            else:
+                relist.append(0)
+        return relist
 
-def train_data():
-    y_data = []
-    # for i in range(8192):
-    #     x = np.random.uniform(0, 1, (9, 1))
-    #     x_data.append(x)
-    # x_data = np.array(x_data)
-    # y_data = np.random.randint(0, 2, (8192,))
-    # y_data = np.array([[i] for i in y_data])
-    path = 'train.txt'
-    fp = open(path, 'r')
-    allfile = fp.read()
-    dic = json.loads(allfile)
-    x_data = np.array(dic['xdata'])
-    for i in dic['ydata']:
-        y_data.append(i[0])
-    y_data = np.array(y_data)
-    # print(len(dic['xdata']))
-    # print(len(dic['ydata']))
-    torch_dataset = Data.TensorDataset(torch.tensor(x_data), torch.tensor(y_data,dtype=torch.float32))
-    loader = Data.DataLoader(
-        dataset=torch_dataset,  # torch TensorDataset format
-        batch_size=batch_size,  # mini batch size
-        shuffle=True,  # 要不要打乱数据 (打乱比较好)
-        num_workers=0,  # 多线程来读数据
-    )
-    return loader
+    def train_data(self):
+        y_data = []
+        path = 'train.txt'
+        fp = open(path, 'r')
+        allfile = fp.read()
+        dic = json.loads(allfile)
+        x_data = np.array(dic['xdata'])
+        for i in dic['ydata']:
+            y_data.append(i[0])
+        y_data = np.array(y_data)
+        torch_dataset = Data.TensorDataset(torch.tensor(x_data), torch.tensor(y_data,dtype=torch.float32))
+        loader = Data.DataLoader(
+            dataset=torch_dataset,  # torch TensorDataset format
+            batch_size=self.batch_size,  # mini batch size
+            shuffle=True,  # 要不要打乱数据 (打乱比较好)
+            num_workers=0,  # 多线程来读数据
+        )
+        return loader
 
-def val_data():
-    test_y_data = []
-    # for i in range(2048):
-    #     x = np.random.uniform(0, 1, (9, 1))
-    #     test_x_data.append(x)
-    # test_x_data = np.array(test_x_data)
-    # test_y_data = np.random.randint(0, 2, (2048,))
-    # y_data = np.array([[i] for i in y_data])
-    path = 'val.txt'
-    fp = open(path, 'r')
-    allfile = fp.read()
-    dic = json.loads(allfile)
-    # print(dic)
-    test_x_data = np.array(dic['xdata'])
-    for i in dic['ydata']:
-        test_y_data.append(i[0])
-    test_y_data = np.array(test_y_data)
-    # print(len(dic['xdata']))
-    # print(len(dic['ydata']))
+    def val_data(self):
+        test_y_data = []
+        path = 'val.txt'
+        fp = open(path, 'r')
+        allfile = fp.read()
+        dic = json.loads(allfile)
+        # print(dic)
+        test_x_data = np.array(dic['xdata'])
+        for i in dic['ydata']:
+            test_y_data.append(i[0])
+        test_y_data = np.array(test_y_data)
+        test_torch_dataset = Data.TensorDataset(torch.tensor(test_x_data), torch.tensor(test_y_data,dtype=torch.float32))
+        test_loader = Data.DataLoader(
+            dataset=test_torch_dataset,  # torch TensorDataset format
+            batch_size=self.batch_size,  # mini batch size
+            shuffle=True,  # 要不要打乱数据 (打乱比较好)
+            num_workers=0,  # 多线程来读数据
+        )
+        return test_loader
 
-    test_torch_dataset = Data.TensorDataset(torch.tensor(test_x_data), torch.tensor(test_y_data,dtype=torch.float32))
-    test_loader = Data.DataLoader(
-        dataset=test_torch_dataset,  # torch TensorDataset format
-        batch_size=batch_size,  # mini batch size
-        shuffle=True,  # 要不要打乱数据 (打乱比较好)
-        num_workers=0,  # 多线程来读数据
-    )
-    return test_loader
+    def train_epoch(self):
+        for epoch in range(self.epochs):
+            train_data_loader = self.train_data()
+            size = len(train_data_loader)
+            # print('loader_size', size)
+            for step, (batch_x, batch_y) in enumerate(train_data_loader):  # 每一步 loader 释放一小批数据用来学习
+                pred = self.model(batch_x)
+                loss = self.loss_fn(pred, batch_y)
+                loss.requires_grad_(True)
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+                if step % 10 == 0:
+                    loss, current = loss.item(), step * len(batch_x)
+                    # print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+                    path1 = r'../newtest/res/'
+                    torch.save(self.model, 'test.pth')
+                    acc ,tpr,fpr = self.test()
+                    if acc> self.total_acc and tpr>= self.total_tpr and fpr<=self.total_fpr:
+                        path2 = str(self.theta)+'_'+str(acc)+'.pth'
+                        path3 = os.path.join(path1,path2)
+                        torch.save(self.model, path3)
+                        self.total_acc = acc
+                        self.total_tpr = tpr
+                        self.total_fpr = fpr
+                    # print('total acc:',self.total_acc,'roc_pos',(fpr,tpr))
+        print('theta',self.theta,'max_acc',self.total_acc,'roc_pos(fpr,tpr)',(self.total_fpr,self.total_tpr))
 
-
-batch_size = 40
-epochs = 50000
-theta = 0.5
-np.random.seed(42)
-model = dcn()
-learning_rate = 1e-7
-loss_fn = nn.MSELoss()
-optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
-total_acc = 0
-
-for epoch in range(epochs):
-    train_data_loader = train_data()
-    size = len(train_data_loader)
-    # print('loader_size', size)
-    for step, (batch_x, batch_y) in enumerate(train_data_loader):  # 每一步 loader 释放一小批数据用来学习
-        # print(batch_x)
-        # print(batch_y)
-        # time.sleep(100)
-        pred = model(batch_x)
-        # print(pred)
-        # print(batch_y)
-        # print(pred)
-        # # time.sleep(5)
-        # print('--------------')
-        loss = loss_fn(pred, batch_y)
-        # print(pred.shape,batch_y.shape)
-        # print(loss)
-        # time.sleep(10)
-        loss.requires_grad_(True)
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-
-        if step % 10 == 0:
-            loss, current = loss.item(), step * len(batch_x)
-            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
-            torch.save(model, 'test.pth')
-            acc = test()
-            if acc> total_acc:
-                paths = str(acc)+'.pth'
-                torch.save(model, paths)
-                total_acc = acc
-            print('total acc:',total_acc)
-            # time.sleep(100)
-            # writer.add_scalar('training loss',loss / 100, t*len(x)+batch//100)
-
-        # print('Epoch: ', epoch, '| Step:', step, '| batch x: ', batch_x.numpy(), '| batch y: ', batch_y.numpy())
+for i in np.arange(0.6502,0.6700,0.0001):
+    p = Trainmodel(i)
+    p.train_epoch()
 
 
 
