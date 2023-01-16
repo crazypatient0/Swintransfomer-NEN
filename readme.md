@@ -23,8 +23,7 @@ clahe,dilate,erode,laplician,canny
 - Feed Swin-T network with RGB and GRAY dataset which contain totally 100000 images.
 - After a few times training, we've captured the best-performing network models.
 - Download trained pth from << BAIDU NET DISK>> 
-- [trained pth (code：h7t8)](链接：https://pan.baidu.com/s/1HAkVu5PmJeRP0mR18R0kvw?pwd=h7t8 
-)
+- trained pth (code：h7t8)https://pan.baidu.com/s/1HAkVu5PmJeRP0mR18R0kvw?pwd=h7t8
 - put them in folder _'predictpath'_
 
 ## Third part - Node equalization network
