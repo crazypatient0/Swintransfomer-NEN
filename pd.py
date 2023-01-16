@@ -142,7 +142,6 @@ def model_ana():
     re_dict = {}
     re_dict['Prediction'] = classes[pred.data.item()]
     re_dict['Possibility'] = round(pb,3)
-    re_dict['Model_Acc'] = model_acc
     print(re_dict)
 
 

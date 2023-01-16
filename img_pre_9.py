@@ -1,7 +1,7 @@
 import argparse
 import os
 import shutil
-
+import nen.net_equilibrium as ne
 import cv2 as cv
 import numpy as np
 import math
@@ -129,10 +129,11 @@ def predictimg(model,pth,model_acc,sp_path):
                 if 'Prediction' in line:
                     # print(type(line))
                     res = eval(line)
-                    res['img'] = file
-                    res['Confidence'] = pb
-                    res['Empty_area'] = str(round(pc*100,2))+'%'
-                    feedback.append(res)
+                    if res['Prediction'] == 'Tumor1N0_Non-Metastatic':
+                        pb = round((1-res['Possibility']),4)
+                    else:
+                        pb = round((res['Possibility']),4)
+                    feedback.append(pb)
         # print(1,feedback)
         return feedback
     else:
@@ -262,21 +263,43 @@ def run(id,input_path):
     pth1_2 = 'predictpath/1021-ep141-gry-86.69.pth '
     model_acc_1_1 = 97.41
     model_acc_1_2 = 86.69
-    feedback2 = predictimg(model1,pth1_2,model_acc_1_2,newpath2)
+
     feedback1 = predictimg(model1,pth1_1,model_acc_1_1,newpath2)
-    avg_prob2 = iterationimg(feedback2)
-    avg_prob1 = iterationimg(feedback1)
-    total_prob = (model_acc_1_2*avg_prob2)/(model_acc_1_2+model_acc_1_1)+(model_acc_1_1*avg_prob1)/(model_acc_1_2+model_acc_1_1)
+    feedback2 = predictimg(model1, pth1_2, model_acc_1_2, newpath2)
+    print(feedback1)
+    print(feedback2)
+    # feedback1 = [0.987,0.987,0.987,0.987,0.987,0.987,0.987,0.987,0.987]
+    cmd = 'python ./nen/net_equilibrium.py  --seq ' + str(feedback1).replace(' ','') + ' --mode ' + 'RGB' + ' --theta ' + str(0.6570)
+    cmd2 = 'python ./nen/net_equilibrium.py  --seq ' + str(feedback2).replace(' ','') + ' --mode ' + 'Gray' + ' --theta ' + str(0.6581)
+    # print(cmd)
+    result = os.popen(cmd)
+    # result = os.system(cmd)
+    res = result.read()
+    for line in res.splitlines():
+        if 'Prediction' in line:
+            res = eval(line)
+            re = res['Prediction']
+    print(re)
+    result2 = os.popen(cmd2)
+    # result = os.system(cmd)
+    res2 = result2.read()
+    for line in res2.splitlines():
+        if 'Prediction' in line:
+            res2 = eval(line)
+            re2 = res2['Prediction']
+    print(re2)
+
 
 
 
     time2 = time.time()
     delta = round(time2-time1,2)
-    # print('总耗时',delta,'秒')
+    print('总耗时',delta,'秒')
 
 if __name__ == '__main__':
     args = parse_option()
-    id = args.ids
-    # input_path = "dataset/11/test5.jpg"
-    input_path = args.imgpath
+    # id = args.ids
+    # input_path = args.imgpath
+    id= '222'
+    input_path = "dataset/11111111/2222.jpg"
     run(id,input_path)

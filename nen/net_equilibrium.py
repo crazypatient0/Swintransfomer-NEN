@@ -1,3 +1,4 @@
+import argparse
 import json
 import os.path
 import time
@@ -257,9 +258,45 @@ class Trainmodel:
                     # print('total acc:',self.total_acc,'roc_pos',(fpr,tpr))
         print('theta',self.theta,'max_acc',self.total_acc,'roc_pos(fpr,tpr)',(self.total_fpr,self.total_tpr))
 
-for i in np.arange(0.6500,0.6700,0.0001):
-    p = Trainmodel(i)
-    p.train_epoch()
+class Valmodel:
+    def __init__(self,seq,mode,theta):
+        self.seq = eval(seq)
+        self.mode = mode
+        self.theta = theta
+
+    def pred(self):
+        if self.mode =='RGB':
+            model = torch.load('./nen/theta_0.6570_acc_0.99.pth')
+        else:
+            model = torch.load('./nen/theta_0.6581_acc_0.91_gray.pth')
+        model.eval()
+        preddata = torch.tensor(np.array([list(self.seq)]))
+        pred = model(preddata).item()
+        res = {}
+        if pred>float(self.theta):
+            res['Prediction'] ='Tumor1N1_Metastatic'
+        else:
+            res['Prediction'] = 'Tumor1N0_Non-Metastatic'
+        print(res)
+
+
+def train_threshold():
+    for i in np.arange(0.6500,0.6700,0.0001):
+        p = Trainmodel(i)
+        p.train_epoch()
+
+def parse_option():
+    parser = argparse.ArgumentParser('Swin Transformer Test script', add_help=False)
+    parser.add_argument('--seq', help='tag of experiment')
+    parser.add_argument('--mode', help='tag of experiment')
+    parser.add_argument('--theta', help='tag of experiment')
+    args, unparsed = parser.parse_known_args()
+
+    return args
 
 
 
+if __name__ == '__main__':
+    args = parse_option()
+    p = Valmodel(args.seq,args.mode,args.theta)
+    p.pred()
