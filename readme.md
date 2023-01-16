@@ -35,3 +35,8 @@ clahe,dilate,erode,laplician,canny
 ## Fourth part - tested  threshold
 - Evaluated this classifier using various metrics like acc,roc,tpr,tnr,fpr,fnr,auc 
 - Eventually we find out best performing threshold which achieve 99% test accuracy,at the mean time 0% of fpr and 98%tpr!
+
+## Get start！
+1. git clone https://github.com/crazypatient0/Swintransfomer-NEN.git
+2. copy your input image into dataset
+3. run start.py (remember to change file path)

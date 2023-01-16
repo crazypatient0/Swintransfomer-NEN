@@ -263,11 +263,10 @@ def run(id,input_path):
     pth1_2 = 'predictpath/1021-ep141-gry-86.69.pth '
     model_acc_1_1 = 97.41
     model_acc_1_2 = 86.69
-
     feedback1 = predictimg(model1,pth1_1,model_acc_1_1,newpath2)
     feedback2 = predictimg(model1, pth1_2, model_acc_1_2, newpath2)
-    print(feedback1)
-    print(feedback2)
+    # print(feedback1)
+    # print(feedback2)
     # feedback1 = [0.987,0.987,0.987,0.987,0.987,0.987,0.987,0.987,0.987]
     cmd = 'python ./nen/net_equilibrium.py  --seq ' + str(feedback1).replace(' ','') + ' --mode ' + 'RGB' + ' --theta ' + str(0.6570)
     cmd2 = 'python ./nen/net_equilibrium.py  --seq ' + str(feedback2).replace(' ','') + ' --mode ' + 'Gray' + ' --theta ' + str(0.6581)
@@ -279,7 +278,11 @@ def run(id,input_path):
         if 'Prediction' in line:
             res = eval(line)
             re = res['Prediction']
-    print(re)
+            if re =="Tumor1N0_Non-Metastatic":
+                fpb = 0
+            else:
+                fpb=1
+    # print(re)
     result2 = os.popen(cmd2)
     # result = os.system(cmd)
     res2 = result2.read()
@@ -287,8 +290,17 @@ def run(id,input_path):
         if 'Prediction' in line:
             res2 = eval(line)
             re2 = res2['Prediction']
-    print(re2)
-
+            if re2 =="Tumor1N0_Non-Metastatic":
+                fpb2 = 0
+            else:
+                fpb2=1
+    # print(re2)
+    final_pred = (fpb*model_acc_1_1*0.5)+ (fpb2*model_acc_1_2*0.6)/( model_acc_1_1+model_acc_1_2)
+    # print(final_pred)
+    if final_pred>0.5:
+        print('Tumor1N1_Metastatic')
+    else:
+        print('Tumor1N0_Non-Metastatic')
 
 
 
@@ -298,8 +310,6 @@ def run(id,input_path):
 
 if __name__ == '__main__':
     args = parse_option()
-    # id = args.ids
-    # input_path = args.imgpath
-    id= '222'
-    input_path = "dataset/11111111/2222.jpg"
+    id = args.ids
+    input_path = args.imgpath
     run(id,input_path)
