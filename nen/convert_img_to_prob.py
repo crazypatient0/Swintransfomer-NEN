@@ -8,22 +8,22 @@ import numpy as np
 
 class FITV():
     def __init__(self):
-        self.train_n0_path = '../newtest/nendataset/train/n0'
-        self.train_n1_path = '../newtest/nendataset/train/n1'
-        self.val_n0_path = '../newtest/nendataset/val/n0'
-        self.val_n1_path = '../newtest/nendataset/val/n1'
-        self.sp_path = '../newtest/nendataset/sp9'
+        self.train_n0_path = '../nen/nendataset/train/n0'
+        self.train_n1_path = '../nen/nendataset/train/n1'
+        self.val_n0_path = '../nen/nendataset/val/n0'
+        self.val_n1_path = '../nen/nendataset/val/n1'
+        self.sp_path = '../nen/nendataset/sp9'
         self.model1 = '../configs/swinv2/swinv2_tiny_patch4_window16_256-512.yaml '
-        self.pth1_1 = '../pridictpath/1008-ep81-rgb-97.41.pth '
-        self.pth1_2 = '../pridictpath/1021-ep141-gry-86.69.pth '
+        self.pth1_1 = '../predictpath/1008-ep81-rgb-97.41.pth '
+        self.pth1_2 = '../predictpath/1021-ep141-gry-86.69.pth '
         self.model_acc_1_1 = 97.41
         self.model_acc_1_2 = 86.69
-        self.traindata = '../newtest/train.txt'
-        self.valdata = '../newtest/val.txt'
+        self.traindata = '../nen/train.txt'
+        self.valdata = '../nen/val.txt'
 
 
     def crop_img_9(self,img_path):
-        img = cv.imread(img_path)
+        img = cv.imread(img_path,0)
         if img.shape[1]>1536 and img.shape[0]>1536:
             res_img = cv.resize(img,(1536,1536),interpolation=cv.INTER_AREA)
         elif img.shape[1]==1536 and img.shape[0]==1536:
@@ -156,8 +156,7 @@ class FITV():
             trainx = []
             for file in sps:
                 path = os.path.join(self.sp_path, file)
-                res = self.pred_img(self.model1,self.pth1_1,self.model_acc_1_1,path)
-                # print(res)
+                res = self.pred_img(self.model1,self.pth1_2,self.model_acc_1_2,path)
                 pb = self.conv_res_to_scalar(res)
                 trainx.append(pb)
             xdata.append(trainx)
@@ -171,7 +170,7 @@ class FITV():
             trainx = []
             for file in sps:
                 path = os.path.join(self.sp_path, file)
-                res = self.pred_img(self.model1,self.pth1_1,self.model_acc_1_1,path)
+                res = self.pred_img(self.model1,self.pth1_2,self.model_acc_1_2,path)
                 # print(res)
                 pb = self.conv_res_to_scalar(res)
                 trainx.append(pb)
@@ -196,7 +195,7 @@ class FITV():
             valx = []
             for file in sps:
                 path = os.path.join(self.sp_path, file)
-                res = self.pred_img(self.model1,self.pth1_1,self.model_acc_1_1,path)
+                res = self.pred_img(self.model1,self.pth1_2,self.model_acc_1_2,path)
                 # print(res)
                 pb = self.conv_res_to_scalar(res)
                 valx.append(pb)
@@ -211,7 +210,7 @@ class FITV():
             valx = []
             for file in sps:
                 path = os.path.join(self.sp_path, file)
-                res = self.pred_img(self.model1,self.pth1_1,self.model_acc_1_1,path)
+                res = self.pred_img(self.model1,self.pth1_2,self.model_acc_1_2,path)
                 # print(res)
                 pb = self.conv_res_to_scalar(res)
                 valx.append(pb)

@@ -244,10 +244,10 @@ class Trainmodel:
                 if step % 10 == 0:
                     loss, current = loss.item(), step * len(batch_x)
                     # print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
-                    path1 = r'../newtest/res/'
+                    path1 = r'../nen/res/'
                     torch.save(self.model, 'test.pth')
                     acc ,tpr,fpr = self.test()
-                    if acc> self.total_acc and tpr>= self.total_tpr and fpr<=self.total_fpr:
+                    if acc>= self.total_acc and tpr>= self.total_tpr and fpr<=self.total_fpr:
                         path2 = str(self.theta)+'_'+str(acc)+'.pth'
                         path3 = os.path.join(path1,path2)
                         torch.save(self.model, path3)
@@ -257,7 +257,7 @@ class Trainmodel:
                     # print('total acc:',self.total_acc,'roc_pos',(fpr,tpr))
         print('theta',self.theta,'max_acc',self.total_acc,'roc_pos(fpr,tpr)',(self.total_fpr,self.total_tpr))
 
-for i in np.arange(0.6502,0.6700,0.0001):
+for i in np.arange(0.6500,0.6700,0.0001):
     p = Trainmodel(i)
     p.train_epoch()
 
